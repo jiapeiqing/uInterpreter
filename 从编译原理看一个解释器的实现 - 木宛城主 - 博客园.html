@@ -1,0 +1,2104 @@
+<!DOCTYPE html>
+<!-- saved from url=(0065)https://www.cnblogs.com/OceanEyes/archive/2017/06/18/7045868.html -->
+<html lang="zh-cn"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="origin">
+    <meta property="og:description" content="『设计模式』中有一个模式可以解释特定的语法规则，它就是解释器模式（Interpreter Pattern）。不同于常见的策略模式或者是工厂模式，解释器模式在.NET或者JDK中并不常见，而且在业务上也">
+    <meta http-equiv="Cache-Control" content="no-transform">
+    <meta http-equiv="Cache-Control" content="no-siteapp">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>从编译原理看一个解释器的实现 - 木宛城主 - 博客园</title>
+    
+    <link rel="stylesheet" href="./从编译原理看一个解释器的实现 - 木宛城主 - 博客园_files/blog-common.min.css">
+    <link id="MainCss" rel="stylesheet" href="./从编译原理看一个解释器的实现 - 木宛城主 - 博客园_files/bundle-lessismoreright.min.css">
+    <link type="text/css" rel="stylesheet" href="./从编译原理看一个解释器的实现 - 木宛城主 - 博客园_files/custom.css">
+    <link id="mobile-style" media="only screen and (max-width: 767px)" type="text/css" rel="stylesheet" href="./从编译原理看一个解释器的实现 - 木宛城主 - 博客园_files/bundle-lessismoreright-mobile.min.css">
+    
+    <link type="application/rss+xml" rel="alternate" href="https://www.cnblogs.com/OceanEyes/rss">
+    <link type="application/rsd+xml" rel="EditURI" href="https://www.cnblogs.com/OceanEyes/rsd.xml">
+    <link type="application/wlwmanifest+xml" rel="wlwmanifest" href="https://www.cnblogs.com/OceanEyes/wlwmanifest.xml">
+    <script src="./从编译原理看一个解释器的实现 - 木宛城主 - 博客园_files/amp4ads-host-v0.js.下载"></script><script src="./从编译原理看一个解释器的实现 - 木宛城主 - 博客园_files/pubads_impl_rendering_2020030501.js.下载"></script><script async="" src="./从编译原理看一个解释器的实现 - 木宛城主 - 博客园_files/analytics.js.下载"></script><script src="./从编译原理看一个解释器的实现 - 木宛城主 - 博客园_files/jquery-2.2.0.min.js.下载"></script>
+    <script src="./从编译原理看一个解释器的实现 - 木宛城主 - 博客园_files/blog-common.min.js.下载"></script>
+    <script>
+        var currentBlogId = 88841;
+        var currentBlogApp = 'OceanEyes';
+        var cb_enable_mathjax = false;
+        var isLogined = false;
+    </script>
+    
+    
+    
+<link rel="preload" href="./从编译原理看一个解释器的实现 - 木宛城主 - 博客园_files/f.txt" as="script"><script type="text/javascript" src="./从编译原理看一个解释器的实现 - 木宛城主 - 博客园_files/f.txt"></script><script src="./从编译原理看一个解释器的实现 - 木宛城主 - 博客园_files/pubads_impl_2020030501.js.下载" async=""></script><link rel="prefetch" href="https://tpc.googlesyndication.com/safeframe/1-0-37/html/container.html"></head>
+<body>
+    <a name="top"></a>
+    <div id="page_begin_html">
+        <a href="https://github.com/MEyes"><img style="position: absolute; top: 0; right: 0; border: 0;" src="./从编译原理看一个解释器的实现 - 木宛城主 - 博客园_files/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f7265645f6161303030302e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_red_aa0000.png"></a>
+    </div>
+    <div id="home">
+    <div id="header">
+        <div id="blogTitle">
+            
+<div class="title"><a id="Header1_HeaderTitle" class="headermaintitle HeaderMainTitle" href="https://www.cnblogs.com/OceanEyes/"><b style="color:#2B6695;margin-left:30px">大鹏一日同风起，扶摇直上九万里</b></a>
+</div>
+<div class="subtitle">
+<div style="float:left;margin-left:11px;">
+<img src="./从编译原理看一个解释器的实现 - 木宛城主 - 博客园_files/o_apple-touch-icon.png" height="89px">
+</div>
+</div>
+
+        </div>
+        <div id="navigator">
+            
+<ul id="navList">
+    <li id="nav_sitehome"><a id="blog_nav_sitehome" class="menu" href="https://www.cnblogs.com/">
+博客园</a>
+</li>
+    <li id="nav_myhome">
+<a id="blog_nav_myhome" class="menu" href="https://www.cnblogs.com/OceanEyes/">
+首页</a>
+</li>
+    <li id="nav_newpost">
+
+<a id="blog_nav_newpost" class="menu" href="https://i.cnblogs.com/EditPosts.aspx?opt=1">
+新随笔</a>
+</li>
+    <li id="nav_contact">
+<a id="blog_nav_contact" class="menu" href="https://msg.cnblogs.com/send/%E6%9C%A8%E5%AE%9B%E5%9F%8E%E4%B8%BB">
+联系</a></li>
+    <li id="nav_rss">
+<a id="blog_nav_rss" class="menu" href="https://www.cnblogs.com/OceanEyes/rss/">
+订阅</a></li>
+    <li id="nav_admin">
+<a id="blog_nav_admin" class="menu" href="https://i.cnblogs.com/">
+管理</a>
+</li>
+</ul>
+
+            <div class="blogStats">
+                
+<span id="stats_post_count">随笔 - 
+153&nbsp;</span>
+<span id="stats_article_count">文章 - 
+0&nbsp;</span>
+<!-- <span id="stats-comment_count"></span> -->
+<span id="stats_comment_count">评论 - 
+1347</span>
+            </div>
+        </div>
+    </div>
+    <div id="main">
+        <div id="mainContent">
+            <div class="forFlow">
+                <div id="post_detail">
+    <div id="topics">
+        <div class="post">
+            <h1 class="postTitle">
+                
+<a id="cb_post_title_url" class="postTitle2" href="https://www.cnblogs.com/OceanEyes/p/implement_a_interpreter.html">从编译原理看一个解释器的实现</a>
+
+            </h1>
+            <div class="clear"></div>
+            <div class="postBody">
+                
+<div id="cnblogs_post_body" class="blogpost-body cnblogs-markdown"><a name="_labelTop"></a><div id="navCategory"><p style="font-size:18px"><b>阅读目录</b></p><ul><li><a href="https://www.cnblogs.com/OceanEyes/archive/2017/06/18/7045868.html#_label0">解释器在游戏领域的应用</a></li><li><a href="https://www.cnblogs.com/OceanEyes/archive/2017/06/18/7045868.html#_label1">一个编译器的前端模型</a></li><li><a href="https://www.cnblogs.com/OceanEyes/archive/2017/06/18/7045868.html#_label2">BNF范式构建</a></li><li><a href="https://www.cnblogs.com/OceanEyes/archive/2017/06/18/7045868.html#_label3">开始实现解释器</a></li><li><a href="https://www.cnblogs.com/OceanEyes/archive/2017/06/18/7045868.html#_label4">小结</a></li></ul></div>
+    <blockquote>
+<p>『设计模式』中有一个模式可以解释特定的语法规则，它就是解释器模式（Interpreter Pattern）。不同于常见的策略模式或者是工厂模式，解释器模式在.NET或者JDK中并不常见，而且在业务上也很少会去解释特定的语法，所以它并不被广泛使用。一个解释器可大可小，大可以是复杂的编译器，小也可以是一个简单的字符串解析，但本质上它们都是对特定的语法做出合理的解释。</p>
+</blockquote>
+<div style="text-align: right"><a href="https://www.cnblogs.com/OceanEyes/archive/2017/06/18/7045868.html#_labelTop">回到顶部</a><a name="_label0"></a></div><h3 id="解释器在游戏领域的应用">解释器在游戏领域的应用</h3>
+<p>虽然解释器模式很少使用，但在在游戏开发中，还是很常见的。比如你在战斗时，普通攻击和魔法攻击一定会产生不同的伤害，游戏设计者会为技能设计不同的<strong>『公式』</strong>，简单如<strong>我方的攻击力-敌方的防御力</strong>，同时『公式』还可以加入参数，如<code>$critRate</code>代表一个爆发率。故游戏的技能伤害如下图所示：</p>
+<p><img src="./从编译原理看一个解释器的实现 - 木宛城主 - 博客园_files/o_battle.png"></p>
+<p>游戏里的『<strong>公式</strong>』本质上是字符串，很像数学表达式，但又比它更高级，可以加入自定义的<strong>参数</strong>，所以『<strong>公式</strong>』更像是数学表达式的超集。既然谈到了数学表达式，那么有必要知道怎样去解析一个数学表达式。</p>
+<p>千万不要小看这个任务，实际上要做一个计算器是非常复杂的。假设输入一个字符串：<em>-(1+(2+3)x4-5)</em>，注意这是一个字符串。解决方案有两种：</p>
+<ul>
+<li><code>while</code>遍历字符串，将括号、运算符、数字等取出来，根据运算符左结合以及优先级计算</li>
+<li>将表达式转化成二叉树形式，二叉树的父节点是运算符，左右子节点代表数字，通过递归遍历树，将左右节点的数字运算之后放入父节点，直至到达根节点</li>
+</ul>
+<p>很显然第一种方式简单直白，但很繁重，代码的易读性也不佳，第二种是目前最好的解决方式，将表达式转化为二叉树。所以难点在于怎样将表达式转化为一棵二叉树？</p>
+<blockquote>
+<p>这需要了解数据结构相关知识，表达式<em>-(1+(2+3)x4-5)</em>又被称为中序排序，中序排序不能生成一棵二叉树，你需要将中序排序转化为前序排序或者后序排序，然后根据中序排序和前序排序生成二叉树，相关算法自行搜索，不做累赘。</p>
+</blockquote>
+<p>我在阅读了《<a href="https://book.douban.com/subject/3296317/">编译原理</a>》第1，2章之后，还有另外一种方式将表达式生成二叉树形式，这也是编译的基本原理。</p>
+<div style="text-align: right"><a href="https://www.cnblogs.com/OceanEyes/archive/2017/06/18/7045868.html#_labelTop">回到顶部</a><a name="_label1"></a></div><h3 id="一个编译器的前端模型">一个编译器的前端模型</h3>
+<p>我们以最简单的算术表达式举例，编译器在分析阶段把一个字符序列分为各个组成部分，最终生成一棵抽象语法树(abstract syntax tree)，如下所示：</p>
+<p><img src="./从编译原理看一个解释器的实现 - 木宛城主 - 博客园_files/o_interpreter.png"></p>
+<p><strong>表达式语法定义</strong></p>
+<p>语法，顾名思义，是一种特定的描述方法。我们学习的英语语法，又或者是程序语言的语法，都有严格的格式要求。对于算术表达式而言，比如<em>9-5+2，3-2</em>，<strong>语法是两个数字之间必须出现+，-，如果出现9+-5,那么这就是错误的语法</strong>。</p>
+<p>那我们怎么来制定语法呢？在编译原理领域，使用一个<strong>通用</strong>的表示方法来描述语法，这个方法就是<strong>上下文无关文法</strong>或<strong>BNF范式</strong>。</p>
+<p>比如上述的算术(+和-)表达式：<em>9-5+2</em>，我们可以推导出如下BNF范式：</p>
+<p><em>list-&gt;list+digit|list-digit|digit</em></p>
+<p><em>digit-&gt;0|1|2|3|4|5|6|7|8|9</em></p>
+<p><em>list</em>代表一个表达式序列，<em>digit</em>代表数字，箭头-&gt;可以读作“可以具有如下形式”，而竖线|代表或的意思。</p>
+<p><strong>词法分析器</strong></p>
+<p>词法分析器读入源程序中的字符序列，将他们组织为具有词法含义的词素，生成并输出代表这些词素的<strong>词法单元(Token)</strong>。</p>
+<p><strong>语法分析器</strong></p>
+<p>语法分析器根据词法单元，以语法分析树的形式构建表达式，最终形成一颗抽象的语法树(abstract syntax tree)，这是一种表示了层次化的结构。</p>
+<p><strong>语法分析树</strong></p>
+<p>如果非终端节点A有一个产生式<em>A-&gt;XYZ</em>，那么在语法分析树中就可能有一个标号为A的内部节点，该节点有三个子节点，从左向右标号为X，Y，Z。内部节点对应于产生式的头，它的子节点对应于产生式的体：</p>
+<p><img src="./从编译原理看一个解释器的实现 - 木宛城主 - 博客园_files/o_tree.png"></p>
+<div style="text-align: right"><a href="https://www.cnblogs.com/OceanEyes/archive/2017/06/18/7045868.html#_labelTop">回到顶部</a><a name="_label2"></a></div><h3 id="bnf范式构建">BNF范式构建</h3>
+<p><strong>数学表达式的特点</strong></p>
+<p>运用编译原理的知识，编写一个自定义的解释器，我们需要如下三个步骤：</p>
+<ul>
+<li>BNF范式来描述游戏『<strong>公式</strong>』</li>
+<li>词法分析器获得词法单元Token，对应的类是<code>LexicalAnalyzer</code></li>
+<li>语法分析器根据Token构建抽象树，对应的类是<code>Parser</code></li>
+</ul>
+<p>我在一开始就提到过，游戏里的『<strong>公式</strong>』很像数学表达式，那么数学表达式有什么<strong>广泛和通用</strong>的特点？</p>
+<p>首先数学表达式由数字和运算符构成，并且运算符有左结合性和优先性：</p>
+<ul>
+<li>结合性：依照惯例，9+5+2等价于(9+5)+2，9-5-2等价于(9-5)-2。当一个运算分量，比如上述的5左右两侧都有运算符时，我们需要一些规则来决定哪个运算符被应用于该运算分量。我们说运算符“+”是左结合的，因为当一个运算分量左右两侧都有“+”号时，它属于其左边运算符。加，减，乘，除四种算术运算符都是左结合。</li>
+<li>优先性：在算术中，乘法和除法比加法和减法具有更高的优先级。因此在表达式9+5x2和9x5+2中，都是运算分量5首先参与x运算。</li>
+</ul>
+<p><strong>算术表达式的BNF构建</strong></p>
+<p>通过对数学表达式的了解，我们知道一个数学表达式有数字、运算符等组成，并且运算符是左结合和有优先性，那怎样去构建它的BNF范式呢？</p>
+<p>我们创建两个非终结符号<em>expr(表达式)</em> 和 <em>term(项)</em> ，分别对应这两个优先级层次，并使用另一个非终结符号<em>factor(因子)</em>来生成表达式的基本单元。</p>
+<p>那什么是<em>factor</em>呢？</p>
+<blockquote>
+<p>我们可以将因子(factor)理解成不能被任何运算符分开的表达式。『不能分开』的意思是说当我们在任意因子的任意一边放置一个运算符，都不会导致这个因子的任何部分分离出来，成为这个运算符的运算分量。当然，因子本身作为一个整体可以成为该运算符的一个运算分量。如果这个因子是由一个括号括起来的表达式，那么这个括号将起到保护其不被分开的作用。</p>
+</blockquote>
+<p><em>factor-&gt;digit|(expr)</em></p>
+<p><em>digit-&gt;0|1|2|3|4|5|6|7|8|9</em></p>
+<p>那什么是<em>term</em>呢？</p>
+<blockquote>
+<p>一个（不是因子）项（term）是一个可能被高优先级的运算符x和/分开，但不能被低优先级运算符分开的表达式。</p>
+</blockquote>
+<p><em>term-&gt;term x factor|term / factor|factor</em></p>
+<p>那什么是<em>expr</em>呢？</p>
+<blockquote>
+<p>一个（不是因子也不是项）的表达式可能被任何一个运算符分开。</p>
+</blockquote>
+<p><em>expr-&gt;expr+term|expr-term|term</em></p>
+<p><strong>因此最终得到的BNF范式是：</strong></p>
+<p><em>expr-&gt;expr+term|expr-term|term</em></p>
+<p><em>term-&gt;term x factor|term/factor|factor</em></p>
+<p><em>factor-&gt;digit|(expr)</em></p>
+<blockquote>
+<p>使用这个BNF范式时，一个表达式就是一个由+或-分割开来的项（term）列表，而项是由x或者/分隔的因子（factor）列表。请注意，任何由括号括起来的表达式都是一个因子。</p>
+</blockquote>
+<p>这个BNF范式的语法分析树为如下所示：</p>
+<p><img src="./从编译原理看一个解释器的实现 - 木宛城主 - 博客园_files/o_expr_.png"></p>
+<p>求值时，从root节点遍历二叉树，如果节点有子节点，递归的方式遍历下去，直到是叶子节点为止，接着将左子树和右子树取得的值放入它们的根节点，最后root节点的值就是表达式最终的值。</p>
+<div style="text-align: right"><a href="https://www.cnblogs.com/OceanEyes/archive/2017/06/18/7045868.html#_labelTop">回到顶部</a><a name="_label3"></a></div><h3 id="开始实现解释器">开始实现解释器</h3>
+<p>有了准备之后，接下来就是实现解释器，它可以解释游戏中的『公式』。</p>
+<p>1.) 创建一个数学表达式类<code>MathExpression</code>，根据面向对象思想，它封装了数据和行为，由于篇幅有限，只展示其骨架：</p>
+<pre><code class="hljs cs"><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title">MathExpression</span>
+{
+    <span class="hljs-keyword">private</span> <span class="hljs-keyword">readonly</span> <span class="hljs-keyword">string</span> _expression;        
+    <span class="hljs-keyword">public</span> <span class="hljs-keyword">int</span> CurrentIndex{}
+    <span class="hljs-keyword">public</span> <span class="hljs-keyword">bool</span> IsIndexOutOfRange{}
+    <span class="hljs-keyword">public</span> <span class="hljs-keyword">bool</span> IsEndOfString{}
+    <span class="hljs-keyword">public</span> <span class="hljs-keyword">char</span> CurrentChar{}
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">char</span> <span class="hljs-title">GetSpecificCharByIndex</span>(<span class="hljs-params"><span class="hljs-keyword">int</span> index</span>)</span>{}
+}</code></pre>
+<p>2.) 创建一个词法分析器<code>LexicalAnalyzer</code>，获取对应的词法单元Token：</p>
+<pre><code class="hljs java"><span class="hljs-keyword">switch</span> (_mathExpression.CurrentChar)
+{
+    <span class="hljs-keyword">case</span> <span class="hljs-string">'+'</span>:
+        token = Token.Add;
+        _mathExpression.CurrentIndex++;
+        <span class="hljs-keyword">break</span>;
+    <span class="hljs-keyword">case</span> <span class="hljs-string">'-'</span>:
+        token = Token.Sub;
+        _mathExpression.CurrentIndex++;
+        <span class="hljs-keyword">break</span>;
+    <span class="hljs-keyword">case</span> <span class="hljs-string">'*'</span>:
+        token=Token.Mul;
+        _mathExpression.CurrentIndex++;
+        <span class="hljs-keyword">break</span>;
+    <span class="hljs-keyword">case</span> <span class="hljs-string">'/'</span>:
+        token = Token.Div;
+        _mathExpression.CurrentIndex++;
+        <span class="hljs-keyword">break</span>;
+    <span class="hljs-keyword">case</span> <span class="hljs-string">'('</span>:
+        token = Token.OParen;
+        _mathExpression.CurrentIndex++;
+        <span class="hljs-keyword">break</span>;
+    <span class="hljs-keyword">case</span> <span class="hljs-string">')'</span>:
+        token = Token.CParen;
+        _mathExpression.CurrentIndex++;
+        <span class="hljs-keyword">break</span>;
+    <span class="hljs-keyword">case</span> <span class="hljs-string">'$'</span>:
+        <span class="hljs-keyword">if</span> (_mathExpression.GetSpecificCharByIndex(_mathExpression.CurrentIndex + <span class="hljs-number">1</span>) ==<span class="hljs-string">'c'</span>)
+        {
+            _mathExpression.CurrentIndex += <span class="hljs-number">2</span>;
+            token = Token.Param;
+        }
+        <span class="hljs-keyword">else</span>
+        {
+            _mathExpression.CurrentIndex++;
+            token=Token.Illegal;
+        }
+        <span class="hljs-keyword">break</span>;
+    <span class="hljs-keyword">default</span>:
+        <span class="hljs-keyword">if</span> (<span class="hljs-keyword">char</span>.IsDigit(_mathExpression.CurrentChar))
+        {
+            token = GetDigitsFromString();
+        }<span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (<span class="hljs-keyword">char</span>.IsLetter(_mathExpression.CurrentChar))
+        {
+            token = GetSineCosineFromString();
+        }
+        <span class="hljs-keyword">else</span>
+        {
+            <span class="hljs-keyword">throw</span>  <span class="hljs-keyword">new</span> Exception(<span class="hljs-string">"Illegal Token"</span>);
+        }
+        <span class="hljs-keyword">break</span>;
+}</code></pre>
+<p>3.) 值得一提的事情，怎样从字符串中获取数字，数字有两种形式：整数和小数点形式，通过<strong>有穷自动机</strong>在不同的状态间跳转并记录下数字的索引下标，直到遇到非数字退出，有穷自动机如下所示：</p>
+<p><img src="./从编译原理看一个解释器的实现 - 木宛城主 - 博客园_files/o_DFA_.png"></p>
+<p>一个有穷自动机的状态判断代码如下：</p>
+<pre><code class="hljs groovy">do
+{
+    isEndOfString = _mathExpression.IsEndOfString;
+    currentChar = _mathExpression.CurrentChar;
+
+    <span class="hljs-keyword">switch</span> (_currentState)
+    {
+        <span class="hljs-keyword">case</span> State.<span class="hljs-string">Init:</span>
+            <span class="hljs-keyword">if</span> (<span class="hljs-keyword">char</span>.IsDigit(currentChar))
+            {
+                _currentState = State.Integer;
+                <span class="hljs-keyword">if</span> (!isEndOfString)
+                {
+                    _mathExpression.CurrentIndex++;
+                }
+            }
+            <span class="hljs-keyword">else</span>
+            {
+               <span class="hljs-comment">//Init状态非数字则退出</span>
+               _currentState= State.Quit;
+            }
+            <span class="hljs-keyword">break</span>;
+        <span class="hljs-keyword">case</span> State.<span class="hljs-string">Integer:</span>
+            <span class="hljs-keyword">if</span> (currentChar == <span class="hljs-string">'.'</span>)
+            {
+                _currentState = State.Float;<span class="hljs-comment">//输入小数点，状态转移到Float</span>
+                <span class="hljs-keyword">if</span> (!isEndOfString)
+                {
+                    _mathExpression.CurrentIndex++;
+                }
+            }
+            <span class="hljs-keyword">else</span>
+            {
+                <span class="hljs-keyword">if</span> (!<span class="hljs-keyword">char</span>.IsDigit(currentChar))<span class="hljs-comment">//既不是数字也不是小数</span>
+                {
+                    _currentState = State.Quit;
+                }
+                <span class="hljs-keyword">else</span>
+                {
+                    <span class="hljs-keyword">if</span> (!isEndOfString)
+                    {
+                        _mathExpression.CurrentIndex++;<span class="hljs-comment">//读取下一个字符</span>
+                    }
+                }
+            }
+            <span class="hljs-keyword">break</span>;
+        <span class="hljs-keyword">case</span> State.<span class="hljs-string">Float:</span>
+            <span class="hljs-keyword">if</span> (!<span class="hljs-keyword">char</span>.IsDigit(currentChar))<span class="hljs-comment">//非数字，退出</span>
+            {
+                _currentState = State.Quit;
+            }
+            <span class="hljs-keyword">else</span>
+            {
+                <span class="hljs-keyword">if</span> (!isEndOfString)
+                {
+                    _mathExpression.CurrentIndex++;
+                }
+            }
+            <span class="hljs-keyword">break</span>;
+        <span class="hljs-keyword">case</span> State.<span class="hljs-string">Quit:</span>
+            <span class="hljs-keyword">break</span>;
+
+    }
+} <span class="hljs-keyword">while</span> (_currentState != State.Quit &amp;&amp; !isEndOfString);</code></pre>
+<p>4.)通过语法解析器<code>Parser</code>构建表达式树，每个节点都是一个抽象<code>Expression</code></p>
+<pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">abstract</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Expression</span>
+</span>{
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">abstract</span> <span class="hljs-keyword">double</span> <span class="hljs-title">Evaluate</span><span class="hljs-params">(Context context)</span></span>;
+}</code></pre>
+<p><code>Expression</code>根据类型不同有常量表达式，二元表达式，一元表达式等，一个常见的二元表达式如下：</p>
+<pre><code class="hljs cs"><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title">BinaryExpression</span>:<span class="hljs-title">Expression</span>
+{
+    <span class="hljs-keyword">private</span> Expression _leftExpression;
+    <span class="hljs-keyword">private</span> Expression _rightExpression;
+    <span class="hljs-keyword">private</span> Operator _operator;
+
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-title">BinaryExpression</span>(<span class="hljs-params">Expression leftExpression,Expression righExpression,Operator op</span>)
+    </span>{
+        _leftExpression = leftExpression;
+        _rightExpression = righExpression;
+        _operator = op;
+    }
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">override</span> <span class="hljs-keyword">double</span> <span class="hljs-title">Evaluate</span>(<span class="hljs-params">Context context</span>)
+    </span>{
+        <span class="hljs-keyword">switch</span> (_operator)
+        {
+            <span class="hljs-keyword">case</span> Operator.Plus:
+                <span class="hljs-keyword">return</span> _leftExpression.Evaluate(context) + _rightExpression.Evaluate(context);
+            <span class="hljs-keyword">case</span> Operator.Minus:
+                <span class="hljs-keyword">return</span> _leftExpression.Evaluate(context) - _rightExpression.Evaluate(context);
+            <span class="hljs-keyword">case</span> Operator.Mul:
+                <span class="hljs-keyword">return</span> _leftExpression.Evaluate(context) * _rightExpression.Evaluate(context);
+            <span class="hljs-keyword">case</span> Operator.Div:
+                <span class="hljs-keyword">return</span> _leftExpression.Evaluate(context) / _rightExpression.Evaluate(context);
+        }
+        <span class="hljs-keyword">return</span> Double.NaN;
+    }
+}</code></pre>
+<p>可以看到左子树和右子树同样是<code>Expression</code>。</p>
+<p>5.)到目前为止，可以说是万事俱备，只欠东风了，这个『东风』就是怎么样去构建表达式树。已知的是，一个 <em>expr</em> 就是一个由+或-分割开来的项（ <em>term</em> ）列表，而项是由x或者/分隔的因子（ <em>factor</em> ）列表。</p>
+<p><em>expr-&gt;expr+term|expr-term|term</em></p>
+<pre><code class="hljs groovy"><span class="hljs-keyword">private</span> Expression Expr()
+{
+    Token old;
+    Expression expression = Term();
+    <span class="hljs-keyword">while</span> (_currentToken==Token.Add|| _currentToken==Token.Sub)
+    {
+        old = _currentToken;
+        _currentToken = _lexicalAnalyzer.GetToken();
+        Expression e1 = Expr();
+
+        expression=<span class="hljs-keyword">new</span> BinaryExpression(expression,e1,old==Token.Add?Operator.Plus:Operator.Minus);
+    }
+    <span class="hljs-keyword">return</span> expression;
+}</code></pre>
+<p><em>term-&gt;term x factor|term/factor|factor</em></p>
+<pre><code class="hljs groovy"><span class="hljs-keyword">private</span> Expression Term()
+{
+    Token old;
+    Expression expression = Factor();
+
+    <span class="hljs-keyword">while</span> (_currentToken==Token.Mul || _currentToken==Token.Div)
+    {
+        old = _currentToken;
+        _currentToken = _lexicalAnalyzer.GetToken();
+
+        Expression e1 = Term();
+        expression=<span class="hljs-keyword">new</span> BinaryExpression(expression,e1,old==Token.Mul?Operator.Mul:Operator.Div);
+    }
+
+    <span class="hljs-keyword">return</span> expression;
+}</code></pre>
+<p><em>factor-&gt;digit|(expr)</em></p>
+<pre><code class="hljs php"><span class="hljs-keyword">private</span> Expression Factor()
+{
+    Token token;
+    Expression expression;
+    <span class="hljs-keyword">if</span> (_currentToken==Token.Double)
+    {
+        expression=<span class="hljs-keyword">new</span> NumericConstant(_lexicalAnalyzer.GetDigits());
+        _currentToken = _lexicalAnalyzer.GetToken();
+    }
+    <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (_currentToken == Token.Param)
+    {
+        expression=<span class="hljs-keyword">new</span> <span class="hljs-keyword">Var</span>();
+        _currentToken = _lexicalAnalyzer.GetToken();
+    }
+    <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (_currentToken==Token.OParen)
+    {
+        _currentToken = _lexicalAnalyzer.GetToken();
+        expression = Expr();
+        <span class="hljs-keyword">if</span> (_currentToken!=Token.CParen)
+        {
+            <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-keyword">Exception</span>(<span class="hljs-string">"Missing Closing Parenthesis\n"</span>);
+        }
+        _currentToken = _lexicalAnalyzer.GetToken();
+    }
+    <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span>(_currentToken==Token.Add || _currentToken==Token.Sub)
+    {
+        <span class="hljs-keyword">var</span> old = _currentToken;
+        _currentToken = _lexicalAnalyzer.GetToken();
+        expression = Factor();
+
+        expression=<span class="hljs-keyword">new</span> UnaryExpression(expression,old==Token.Add?Operator.Plus:Operator.Minus);
+
+    }
+    <span class="hljs-keyword">else</span>
+    {
+        <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-keyword">Exception</span>(<span class="hljs-string">"error"</span>);
+    }
+    <span class="hljs-keyword">return</span> expression;
+}</code></pre>
+<p>最后生成的树结构如下所示：</p>
+<p><img src="./从编译原理看一个解释器的实现 - 木宛城主 - 博客园_files/o_ast_.png"></p>
+<div style="text-align: right"><a href="https://www.cnblogs.com/OceanEyes/archive/2017/06/18/7045868.html#_labelTop">回到顶部</a><a name="_label4"></a></div><h3 id="小结">小结</h3>
+<blockquote>
+<p>本文为大家介绍了怎样从编译原理的角度来实现一个解释器。在游戏领域，需要解释器来解释自定义的『公式』。这个『公式』的语法往往是和上下文无关的，又被称为BNF范式。解释器的核心就是怎样构建一棵抽象的表达式树，这需要词法分析和语法分析的相关知识。</p>
+</blockquote>
+<p>参考代码如下：<a href="https://github.com/MEyes/uInterpreter" class="uri">https://github.com/MEyes/uInterpreter</a></p>
+
+</div>
+<div id="MySignature" style="display: block;"> <fieldset style="background-color:#ffffa0; font-family:微软雅黑; font-size:15px;color:Black; width:650px;">
+  <legend><a href="http://creativecommons.org/licenses/by/2.5/cn/"><img src="./从编译原理看一个解释器的实现 - 木宛城主 - 博客园_files/88x31.png"></a></legend>
+<div style=" border-style:dotted;">
+本博客为<a href="https://www.cnblogs.com/OceanEyes/archive/2017/06/18/www.cnblogs.com/oceaneyes" target="_blank">木宛城主</a>原创，基于<a href="http://creativecommons.org/licenses/by/2.5/cn/">Creative Commons Attribution 2.5 China Mainland License</a>发布，欢迎转载，演绎或用于商业目的，但是必须保留本文的署名<a href="https://www.cnblogs.com/OceanEyes/archive/2017/06/18/www.cnblogs.com/oceaneyes" target="_blank">木宛城主</a>（包含链接）。如您有任何疑问或者授权方面的协商，请给我留言。
+</div>
+</fieldset></div>
+<div class="clear"></div>
+<div id="blog_post_info_block"><div id="BlogPostCategory">
+    分类: 
+            <a href="https://www.cnblogs.com/OceanEyes/category/352178.html" target="_blank">Thinking In Design Pattern</a></div>
+
+
+    <div id="blog_post_info">
+<div id="green_channel">
+        <a href="javascript:void(0);" id="green_channel_digg" onclick="DiggIt(7045868,cb_blogId,1);green_channel_success(this,&#39;谢谢推荐！&#39;);">好文要顶</a>
+        <a id="green_channel_follow" onclick="follow(&#39;7d9cc6a0-df7a-e011-a53f-842b2b196315&#39;);" href="javascript:void(0);">关注我</a>
+    <a id="green_channel_favorite" onclick="AddToWz(cb_entryId);return false;" href="javascript:void(0);">收藏该文</a>
+    <a id="green_channel_weibo" href="javascript:void(0);" title="分享至新浪微博" onclick="ShareToTsina()"><img src="./从编译原理看一个解释器的实现 - 木宛城主 - 博客园_files/icon_weibo_24.png" alt=""></a>
+    <a id="green_channel_wechat" href="javascript:void(0);" title="分享至微信" onclick="shareOnWechat()"><img src="./从编译原理看一个解释器的实现 - 木宛城主 - 博客园_files/wechat.png" alt=""></a>
+</div>
+<div id="author_profile">
+    <div id="author_profile_info" class="author_profile_info">
+            <a href="https://home.cnblogs.com/u/OceanEyes/" target="_blank"><img src="./从编译原理看一个解释器的实现 - 木宛城主 - 博客园_files/20150329043854.png" class="author_avatar" alt=""></a>
+        <div id="author_profile_detail" class="author_profile_info">
+            <a href="https://home.cnblogs.com/u/OceanEyes/">木宛城主</a><br>
+            <a href="https://home.cnblogs.com/u/OceanEyes/followees/">关注 - 0</a><br>
+            <a href="https://home.cnblogs.com/u/OceanEyes/followers/">粉丝 - 1663</a>
+        </div>
+    </div>
+    <div class="clear"></div>
+    <div id="author_profile_honor">推荐博客</div>
+    <div id="author_profile_follow">
+                <a href="javascript:void(0);" onclick="follow(&#39;7d9cc6a0-df7a-e011-a53f-842b2b196315&#39;);return false;">+加关注</a>
+    </div>
+</div>
+<div id="div_digg"><div style="padding-bottom: 5px"><span class="icon_favorite" style="padding-top: 2px; padding-bottom: 2px"></span><a onclick="follow(&#39;7d9cc6a0-df7a-e011-a53f-842b2b196315&#39;);" href="javascript:void(0);" style="font-weight: bold; padding-left: 5px;">关注木宛城主</a></div>
+    <div class="diggit" onclick="votePost(7045868,&#39;Digg&#39;)">
+        <span class="diggnum" id="digg_count">5</span>
+    </div>
+    <div class="buryit" onclick="votePost(7045868,&#39;Bury&#39;)">
+        <span class="burynum" id="bury_count">0</span>
+    </div>
+    <div class="clear"></div>
+    <div class="diggword" id="digg_tips">
+    </div>
+</div>
+
+<script type="text/javascript">
+    currentDiggType = 0;
+</script></div>
+    <div class="clear"></div>
+    <div id="post_next_prev">
+
+    <a href="https://www.cnblogs.com/OceanEyes/p/building_service_layer.html" class="p_n_p_prefix">« </a> 上一篇：    <a href="https://www.cnblogs.com/OceanEyes/p/building_service_layer.html" title="发布于 2017-06-08 12:39">Unity应用架构设计(11)——一个网络层的构建</a>
+    <br>
+    <a href="https://www.cnblogs.com/OceanEyes/p/aop_in_action.html" class="p_n_p_prefix">» </a> 下一篇：    <a href="https://www.cnblogs.com/OceanEyes/p/aop_in_action.html" title="发布于 2017-07-04 18:42">Unity应用架构设计(12)——AOP思想的实践</a>
+
+</div>
+</div>
+            </div>
+            <div class="postDesc">posted @ 
+<span id="post-date">2017-06-18 23:25</span>&nbsp;
+<a href="https://www.cnblogs.com/OceanEyes/">木宛城主</a>&nbsp;
+阅读(<span id="post_view_count">6853</span>)&nbsp;
+评论(<span id="post_comment_count">5</span>)&nbsp;
+<a href="https://i.cnblogs.com/EditPosts.aspx?postid=7045868" rel="nofollow">编辑</a>&nbsp;
+<a href="javascript:void(0)" onclick="AddToWz(7045868);return false;">收藏</a></div>
+        </div>
+<script src="./从编译原理看一个解释器的实现 - 木宛城主 - 博客园_files/highlight.min.js.下载"></script>
+<script>markdown_highlight();</script>
+<script>
+    var allowComments = true, cb_blogId = 88841, cb_blogApp = 'OceanEyes', cb_blogUserGuid = '7d9cc6a0-df7a-e011-a53f-842b2b196315';
+    var cb_entryId = 7045868, cb_entryCreatedDate = '2017-06-18 23:25', cb_postType = 1; 
+    loadViewCount(cb_entryId);
+</script><a name="!comments"></a>
+<div id="blog-comments-placeholder">
+
+<div id="comment_pager_top">
+    
+</div>
+
+
+<div class="feedback_area_title">评论列表</div>
+<div class="feedbackNoItems"></div>
+
+        <div class="feedbackItem">
+            <div class="feedbackListSubtitle">
+                <div class="feedbackManage">
+                    &nbsp;&nbsp;
+                    
+
+<span class="comment_actions">
+    
+    
+    
+    
+</span>
+
+
+                </div>
+                <!-- Title -->
+                
+<a href="https://www.cnblogs.com/OceanEyes/archive/2017/06/18/7045868.html#3717048" class="layer">#1楼</a>
+<a name="3717048" id="comment_anchor_3717048"></a>
+
+
+                <!-- PostDate -->
+                
+<span class="comment_date">2017-06-19 00:36</span>
+
+
+                <!--NameLink-->
+                
+
+            <a id="a_comment_author_3717048" href="https://www.cnblogs.com/freeblues/" target="_blank">自由布鲁斯</a>
+
+                <div class="feedbackCon">
+                    
+<div id="comment_body_3717048" data-format-type="Ubb" class="blog_comment_body cnblogs-ubb">
+    学习一下
+</div>
+        <div class="comment_vote">
+            <span class="comment_error" style="color: red"></span>
+            <a href="javascript:void(0);" class="comment_digg" onclick="return voteComment(3717048, &#39;Digg&#39;, this.parentElement, false);">
+                支持(0)
+            </a>
+            <a href="javascript:void(0);" class="comment_burry" onclick="return voteComment(3717048, &#39;Bury&#39;, this.parentElement, false);">
+                反对(0)
+            </a>
+        </div>
+        <span id="comment_3717048_avatar" style="display:none">
+            https://pic.cnblogs.com/face/995377/20160720112558.png
+        </span>
+
+                </div>
+            </div>
+        </div>
+        <div class="feedbackItem">
+            <div class="feedbackListSubtitle">
+                <div class="feedbackManage">
+                    &nbsp;&nbsp;
+                    
+
+<span class="comment_actions">
+    
+    
+    
+    
+</span>
+
+
+                </div>
+                <!-- Title -->
+                
+<a href="https://www.cnblogs.com/OceanEyes/archive/2017/06/18/7045868.html#3717105" class="layer">#2楼</a>
+<a name="3717105" id="comment_anchor_3717105"></a>
+
+
+                <!-- PostDate -->
+                
+<span class="comment_date">2017-06-19 08:57</span>
+
+
+                <!--NameLink-->
+                
+
+            <a id="a_comment_author_3717105" href="https://www.cnblogs.com/crazyyang/" target="_blank">Crazy_Yang</a>
+
+                <div class="feedbackCon">
+                    
+<div id="comment_body_3717105" data-format-type="Ubb" class="blog_comment_body cnblogs-ubb">
+    牛 深入简出！
+</div>
+        <div class="comment_vote">
+            <span class="comment_error" style="color: red"></span>
+            <a href="javascript:void(0);" class="comment_digg" onclick="return voteComment(3717105, &#39;Digg&#39;, this.parentElement, false);">
+                支持(0)
+            </a>
+            <a href="javascript:void(0);" class="comment_burry" onclick="return voteComment(3717105, &#39;Bury&#39;, this.parentElement, false);">
+                反对(0)
+            </a>
+        </div>
+        <span id="comment_3717105_avatar" style="display:none">
+            https://pic.cnblogs.com/face/417698/20150303090438.png
+        </span>
+
+                </div>
+            </div>
+        </div>
+        <div class="feedbackItem">
+            <div class="feedbackListSubtitle">
+                <div class="feedbackManage">
+                    &nbsp;&nbsp;
+                    
+
+<span class="comment_actions">
+    
+    
+    
+    
+</span>
+
+
+                </div>
+                <!-- Title -->
+                
+<a href="https://www.cnblogs.com/OceanEyes/archive/2017/06/18/7045868.html#3717183" class="layer">#3楼</a>
+<a name="3717183" id="comment_anchor_3717183"></a>
+
+
+                <!-- PostDate -->
+                
+<span class="comment_date">2017-06-19 10:04</span>
+
+
+                <!--NameLink-->
+                
+
+            <a id="a_comment_author_3717183" href="https://www.cnblogs.com/straybirds/" target="_blank">假程序猿</a>
+
+                <div class="feedbackCon">
+                    
+<div id="comment_body_3717183" data-format-type="Ubb" class="blog_comment_body cnblogs-ubb">
+    mark
+</div>
+        <div class="comment_vote">
+            <span class="comment_error" style="color: red"></span>
+            <a href="javascript:void(0);" class="comment_digg" onclick="return voteComment(3717183, &#39;Digg&#39;, this.parentElement, false);">
+                支持(0)
+            </a>
+            <a href="javascript:void(0);" class="comment_burry" onclick="return voteComment(3717183, &#39;Bury&#39;, this.parentElement, false);">
+                反对(0)
+            </a>
+        </div>
+        <span id="comment_3717183_avatar" style="display:none">
+            https://pic.cnblogs.com/face/874126/20170222145207.png
+        </span>
+
+                </div>
+            </div>
+        </div>
+        <div class="feedbackItem">
+            <div class="feedbackListSubtitle">
+                <div class="feedbackManage">
+                    &nbsp;&nbsp;
+                    
+
+<span class="comment_actions">
+    
+    
+    
+    
+</span>
+
+
+                </div>
+                <!-- Title -->
+                
+<a href="https://www.cnblogs.com/OceanEyes/archive/2017/06/18/7045868.html#3718773" class="layer">#4楼</a>
+<a name="3718773" id="comment_anchor_3718773"></a>
+
+
+                <!-- PostDate -->
+                
+<span class="comment_date">2017-06-20 17:15</span>
+
+
+                <!--NameLink-->
+                
+
+            <a id="a_comment_author_3718773" href="https://www.cnblogs.com/sgd-unity3d/" target="_blank">游戏开发实验室</a>
+
+                <div class="feedbackCon">
+                    
+<div id="comment_body_3718773" data-format-type="Ubb" class="blog_comment_body cnblogs-ubb">
+    直接使用Lua 就可以了啊！  在复杂的字符串表达式都是可以的
+</div>
+        <div class="comment_vote">
+            <span class="comment_error" style="color: red"></span>
+            <a href="javascript:void(0);" class="comment_digg" onclick="return voteComment(3718773, &#39;Digg&#39;, this.parentElement, false);">
+                支持(0)
+            </a>
+            <a href="javascript:void(0);" class="comment_burry" onclick="return voteComment(3718773, &#39;Bury&#39;, this.parentElement, false);">
+                反对(0)
+            </a>
+        </div>
+        <span id="comment_3718773_avatar" style="display:none">
+            https://pic.cnblogs.com/face/595819/20140318072714.png
+        </span>
+
+                </div>
+            </div>
+        </div>
+        <div class="feedbackItem">
+            <div class="feedbackListSubtitle">
+                <div class="feedbackManage">
+                    &nbsp;&nbsp;
+                    
+
+<span class="comment_actions">
+    
+    
+    
+    
+</span>
+
+
+                </div>
+                <!-- Title -->
+                
+<a href="https://www.cnblogs.com/OceanEyes/archive/2017/06/18/7045868.html#3962947" class="layer">#5楼</a>
+<a name="3962947" id="comment_anchor_3962947"></a>
+
+        <span id="comment-maxId" style="display:none">3962947</span>
+        <span id="comment-maxDate" style="display:none">2018/4/27 下午9:42:49</span>
+
+                <!-- PostDate -->
+                
+<span class="comment_date">2018-04-27 21:42</span>
+
+
+                <!--NameLink-->
+                
+
+            <a id="a_comment_author_3962947" href="https://www.cnblogs.com/lindexi/" target="_blank">lindexi</a>
+
+                <div class="feedbackCon">
+                    
+<div id="comment_body_3962947" data-format-type="Ubb" class="blog_comment_body cnblogs-ubb">
+    我也写过 matlab 的数学表达式解释，现在已经在项目使用，用的算法需要覆盖 sin(x) 这些，所以就没有使用 BNF 。看到了博主的博客，点赞，讲的好明白，我自己写给专利看的，结果他都说看不懂。
+</div>
+        <div class="comment_vote">
+            <span class="comment_error" style="color: red"></span>
+            <a href="javascript:void(0);" class="comment_digg" onclick="return voteComment(3962947, &#39;Digg&#39;, this.parentElement, false);">
+                支持(0)
+            </a>
+            <a href="javascript:void(0);" class="comment_burry" onclick="return voteComment(3962947, &#39;Bury&#39;, this.parentElement, false);">
+                反对(0)
+            </a>
+        </div>
+        
+
+                </div>
+            </div>
+        </div>
+
+
+<div id="comment_pager_bottom">
+    
+</div>
+</div>
+<script>
+    var commentManager = new blogCommentManager();
+    commentManager.renderComments(0);
+</script>
+
+<div id="comment_form" class="commentform">
+    <a name="commentform"></a>
+    <div id="divCommentShow"></div>
+    <div id="comment_nav"><span id="span_refresh_tips"></span><a href="javascript:void(0);" onclick="return RefreshCommentList();" id="lnk_RefreshComments" runat="server" clientidmode="Static">刷新评论</a><a href="https://www.cnblogs.com/OceanEyes/archive/2017/06/18/7045868.html#" onclick="return RefreshPage();">刷新页面</a><a href="https://www.cnblogs.com/OceanEyes/archive/2017/06/18/7045868.html#top">返回顶部</a></div>
+    <div id="comment_form_container" style="visibility: visible;"><div class="login_tips">
+    注册用户登录后才能发表评论，请 
+    <a rel="nofollow" href="javascript:void(0);" class="underline" onclick="return login(&#39;commentform&#39;);">登录</a>
+     或 
+    <a rel="nofollow" href="javascript:void(0);" class="underline" onclick="return register();">注册</a>，
+    <a href="https://www.cnblogs.com/">访问</a> 网站首页。
+</div></div>
+    <div class="ad_text_commentbox" id="ad_text_under_commentbox"></div>
+    <div id="ad_t2"><a href="http://www.ucancode.com/index.htm" target="_blank" onclick="ga(&#39;send&#39;, &#39;event&#39;, &#39;Link&#39;, &#39;click&#39;, &#39;T2-ucancode&#39;)">【推荐】超50万行VC++源码: 大型组态工控、电力仿真CAD与GIS源码库</a><br><a href="https://cloud.tencent.com/act/season?fromSource=gwzcw.3422970.3422970.3422970&amp;utm_medium=cpc&amp;utm_id=gwzcw.3422970.3422970.3422970" target="_blank" onclick="ga(&#39;send&#39;, &#39;event&#39;, &#39;Link&#39;, &#39;click&#39;, &#39;T2-腾讯云&#39;)">【活动】腾讯云服务器推出云产品采购季 1核2G首年仅需99元</a><br><a href="https://developer.aliyun.com/article/715141?utm_content=g_1000088938" target="_blank" onclick="ga(&#39;send&#39;, &#39;event&#39;, &#39;Link&#39;, &#39;click&#39;, &#39;T2-阿里云开发者社区&#39;)">【推荐】12知识点+20干货案例+110面试题，助你拿offer | Python面试宝典</a><br><a href="https://developer.aliyun.com/article/718700?utm_content=g_1000088931" target="_blank" onclick="ga(&#39;send&#39;, &#39;event&#39;, &#39;Link&#39;, &#39;click&#39;, &#39;T2-阿里云开发者社区&#39;)">【推荐】免费下载《阿里工程师的自我修养》</a><br></div>
+    <div id="opt_under_post"></div>
+    <script async="async" src="./从编译原理看一个解释器的实现 - 木宛城主 - 博客园_files/gpt.js.下载"></script>
+    <script>
+        var googletag = googletag || {};
+        googletag.cmd = googletag.cmd || [];
+    </script>
+    <script>
+        googletag.cmd.push(function () {
+            googletag.defineSlot("/1090369/C1", [300, 250], "div-gpt-ad-1546353474406-0").addService(googletag.pubads());
+            googletag.defineSlot("/1090369/C2", [468, 60], "div-gpt-ad-1539008685004-0").addService(googletag.pubads());
+            googletag.pubads().enableSingleRequest();
+            googletag.enableServices();
+        });
+    </script>
+    <div id="cnblogs_c1" class="c_ad_block">
+        <div id="div-gpt-ad-1546353474406-0" style="height:250px; width:300px;" data-google-query-id="CPP82v_JoOgCFQZgKwodtbIGEw"><div id="google_ads_iframe_/1090369/C1_0__container__" style="border: 0pt none;"><iframe id="google_ads_iframe_/1090369/C1_0" title="3rd party ad content" name="google_ads_iframe_/1090369/C1_0" width="300" height="250" scrolling="no" marginwidth="0" marginheight="0" frameborder="0" style="border: 0px; vertical-align: bottom;" data-google-container-id="1" src="./从编译原理看一个解释器的实现 - 木宛城主 - 博客园_files/saved_resource.html"></iframe></div></div>
+    </div>
+    <div id="under_post_news"><div class="recomm-block"><b>相关博文：</b><br>·  <a title="编译原理学习笔记一(待续)" href="https://www.cnblogs.com/zdcaolei/archive/2012/04/04/2432094.html" target="_blank" onclick="clickRecomItmem(2432094)">编译原理学习笔记一(待续)</a><br>·  <a title="自己动手开发编译器（六）上下文无关语言和文法" href="https://www.cnblogs.com/Ninputer/archive/2011/06/18/2084383.html" target="_blank" onclick="clickRecomItmem(2084383)">自己动手开发编译器（六）上下文无关语言和文法</a><br>·  <a title="简单词法分析器的实现原理（编译原理）" href="https://www.cnblogs.com/sunBolg/archive/2012/06/10/2520952.html" target="_blank" onclick="clickRecomItmem(2520952)">简单词法分析器的实现原理（编译原理）</a><br>·  <a title="从离散数学到编译原理--百姓网编程题后序" href="https://www.cnblogs.com/SeasonLee/archive/2010/05/11/1731414.html" target="_blank" onclick="clickRecomItmem(1731414)">从离散数学到编译原理--百姓网编程题后序</a><br>·  <a title="自己动手开发编译器（十）miniSharp语法分析器" href="https://www.cnblogs.com/Ninputer/archive/2011/07/08/2099570.html" target="_blank" onclick="clickRecomItmem(2099570)">自己动手开发编译器（十）miniSharp语法分析器</a><br>»  <a target="_blank" href="https://recomm.cnblogs.com/blogpost/7045868">更多推荐...</a><div id="cnblogs_t5"><a href="https://developer.aliyun.com/article/744375?utm_content=g_1000104137" target="_blank" onclick="ga(&#39;send&#39;, &#39;event&#39;, &#39;Link&#39;, &#39;click&#39;, &#39;T5-阿里云开发者社区&#39;)">合辑 | 学习python不可不知的开发者词条汇总！</a></div></div></div>
+    <div id="cnblogs_c2" class="c_ad_block">
+        <div id="div-gpt-ad-1539008685004-0" style="height:60px; width:468px;" data-google-query-id="CPT82v_JoOgCFQZgKwodtbIGEw">
+            <script>
+                if (new Date() >= new Date(2018, 9, 13)) {
+                    googletag.cmd.push(function () { googletag.display("div-gpt-ad-1539008685004-0"); });
+                }
+            </script>
+        <div id="google_ads_iframe_/1090369/C2_0__container__" style="border: 0pt none; width: 468px; height: 60px;"></div></div>
+    </div>
+    <div id="under_post_kb">
+<div class="itnews c_ad_block">
+    <b>最新 IT 新闻</b>:
+    <br>
+ ·              <a href="https://news.cnblogs.com/n/657757/" target="_blank">旧金山湾区6个县发布就地庇护令：Apple Store要停业三周以上</a>
+            <br>
+ ·              <a href="https://news.cnblogs.com/n/657756/" target="_blank">谷歌将其新冠病毒信息网站的发布时间推迟到本周晚些时候</a>
+            <br>
+ ·              <a href="https://news.cnblogs.com/n/657755/" target="_blank">苹果在现代100大设计排行榜上独占鳌头</a>
+            <br>
+ ·              <a href="https://news.cnblogs.com/n/657752/" target="_blank">NASA拍摄到热带气旋“赫洛德”（Herold）最新卫星图像</a>
+            <br>
+ ·              <a href="https://news.cnblogs.com/n/657751/" target="_blank">鸿蒙“上车” ，华为汽车离上路还需多久？</a>
+            <br>
+    » <a href="https://news.cnblogs.com/" title="IT 新闻" target="_blank">更多新闻...</a>
+</div></div>
+    <div id="HistoryToday" class="c_ad_block">
+<b>历史上的今天：</b>
+<br>
+
+2012-06-18    <a href="https://www.cnblogs.com/OceanEyes/archive/2012/06/18/project.html">两天完成一个小型工程报价系统(三层架构)</a>
+    <br>
+</div>
+    <script type="text/javascript">
+        fixPostBody();
+setTimeout(function() { incrementViewCount(cb_entryId); }, 50);        deliverAdT2();
+        deliverAdC1();
+        deliverAdC2();
+        loadNewsAndKb();
+        loadBlogSignature();
+LoadPostCategoriesTags(cb_blogId, cb_entryId);        LoadPostInfoBlock(cb_blogId, cb_entryId, cb_blogApp, cb_blogUserGuid);
+        GetPrevNextPost(cb_entryId, cb_blogId, cb_entryCreatedDate, cb_postType);
+        loadOptUnderPost();
+        GetHistoryToday(cb_blogId, cb_blogApp, cb_entryCreatedDate);
+    </script>
+</div>    </div>
+</div>
+            </div>
+        </div>
+
+        <div id="sideBar">
+            <div id="sideBarMain">
+                
+<div id="sidebar_news" class="newsItem">
+<h3 class="catListTitle">公告</h3>
+
+<div id="blog-news">
+    <p>微信公众号</p>
+<img width="200px" height="200px" src="./从编译原理看一个解释器的实现 - 木宛城主 - 博客园_files/o_qrcode_for_gh_455306acb3af_430.jpg">
+
+
+<h3 style="background-color: #3E6D8E;
+border-bottom: 2px solid #F90;
+color: white;
+font-size: 105%;
+margin: 15px 0 5px;
+padding: 2px 5px;
+cursor: pointer;">About Me</h3>
+<p><img src="./从编译原理看一个解释器的实现 - 木宛城主 - 博客园_files/o_MVP.png" alt="">&nbsp;</p>
+<p><br>
+</p>
+C# &amp; .NET交流群：
+<a target="_blank" href="http://shang.qq.com/wpa/qunwpa?idkey=60001c3d8e382464db3891e0ab5c132695c1ee58c0dc8092852db6073d2c790b"><img border="0" src="./从编译原理看一个解释器的实现 - 木宛城主 - 博客园_files/group.png" alt=".NET交流1（.NET）" title=".NET交流1（.NET）"></a>
+<br>
+SharePoint交流群：
+<a target="_blank" href="http://shang.qq.com/wpa/qunwpa?idkey=4fd3826e28d62883d12382cbf90bb989a7799d2b36366f34c6b4590f96d4dbed"><img border="0" src="./从编译原理看一个解释器的实现 - 木宛城主 - 博客园_files/group.png" alt="SharePoint 2013入门与提高" title="SharePoint 2013入门与提高"></a>
+    <div id="profile_block">
+        昵称：
+        <a href="https://home.cnblogs.com/u/OceanEyes/">
+            木宛城主
+        </a>
+        <br>
+        园龄：
+        <a href="https://home.cnblogs.com/u/OceanEyes/" title="入园时间：2011-05-10">
+            8年10个月
+        </a>
+        <br>
+荣誉：                <a href="https://www.cnblogs.com/expert/">推荐博客</a>
+                <br>
+        粉丝：
+        <a href="https://home.cnblogs.com/u/OceanEyes/followers/">
+            1663
+        </a>
+        <br>
+        关注：
+        <a href="https://home.cnblogs.com/u/OceanEyes/followees/">
+            0
+        </a>
+        <div id="p_b_follow">
+<a href="javascript:void(0)" onclick="follow(&#39;7d9cc6a0-df7a-e011-a53f-842b2b196315&#39;)">+加关注</a></div>
+        <script>getFollowStatus('7d9cc6a0-df7a-e011-a53f-842b2b196315');</script>
+    </div>
+</div></div>
+
+                <div id="calendar"><div id="blog-calendar" style="display:none"></div></div>                
+                <script>loadBlogDefaultCalendar();</script>
+                <div id="leftcontentcontainer">
+                    <!-- begin:SingleColumn -->
+                    <div id="blog-sidecolumn">
+<!-- 搜索 -->
+<div id="sidebar_search" class="sidebar-block">
+    
+</div>
+
+<!-- 常用链接 -->
+
+
+<!-- 最新随笔 -->
+<div id="sidebar_recentposts" class="sidebar-block">
+    
+<div class="catListEssay">
+    <h3 class="catListTitle">最新随笔</h3>
+    <ul>
+                <li>
+                    
+
+<a href="https://www.cnblogs.com/OceanEyes/p/design_pattern_in_gateway.html">1.小谈网关项目中的设计模式</a>
+
+                </li>
+                <li>
+                    
+
+<a href="https://www.cnblogs.com/OceanEyes/p/log_strategy.html">2.Unity应用架构设计(13)——日志组件的实施</a>
+
+                </li>
+                <li>
+                    
+
+<a href="https://www.cnblogs.com/OceanEyes/p/aop_in_action.html">3.Unity应用架构设计(12)——AOP思想的实践</a>
+
+                </li>
+                <li>
+                    
+
+<a href="https://www.cnblogs.com/OceanEyes/p/implement_a_interpreter.html">4.从编译原理看一个解释器的实现</a>
+
+                </li>
+                <li>
+                    
+
+<a href="https://www.cnblogs.com/OceanEyes/p/building_service_layer.html">5.Unity应用架构设计(11)——一个网络层的构建</a>
+
+                </li>
+                <li>
+                    
+
+<a href="https://www.cnblogs.com/OceanEyes/p/coroutine_vs_multithreading_part2.html">6.Unity应用架构设计(10)——绕不开的协程和多线程（Part 2）</a>
+
+                </li>
+                <li>
+                    
+
+<a href="https://www.cnblogs.com/OceanEyes/p/coroutine_vs_threading.html">7.Unity应用架构设计(10)——绕不开的协程和多线程（Part 1）</a>
+
+                </li>
+                <li>
+                    
+
+<a href="https://www.cnblogs.com/OceanEyes/p/thinking_in_repository_pattern.html">8.Unity应用架构设计(9)——构建统一的 Repository</a>
+
+                </li>
+                <li>
+                    
+
+<a href="https://www.cnblogs.com/OceanEyes/p/using_service_locator.html">9.Unity应用架构设计(8)——使用ServiceLocator实现对象的注入</a>
+
+                </li>
+                <li>
+                    
+
+<a href="https://www.cnblogs.com/OceanEyes/p/factory_pattern.html">10.Unity应用架构设计(7)——IoC工厂理念先行</a>
+
+                </li>
+    </ul>
+</div>
+
+</div>
+
+
+<!-- 我的标签 -->
+
+
+<!-- 积分与排名 -->
+
+
+<!-- 随笔分类、随笔档案、文章分类、新闻分类、相册、链接 -->
+<div id="sidebar_categories">
+    
+        <div class="catListPostCategory">
+            <h3 class="catListTitle">
+                
+
+随笔分类
+<span style="font-size:11px;font-weight:normal">(199)</span>
+
+
+            </h3>
+            <ul>
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/category/839970.html" rel="" target="">
+    .NET Core(1)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/category/300842.html" rel="" target="">
+    Algorithms(2)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/category/374646.html" rel="" target="">
+    ASP.NET(5)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/category/404304.html" rel="" target="">
+    ASP.NET Essential(4)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/category/393525.html" rel="" target="">
+    ASP.NET MVC(12)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/category/696137.html" rel="" target="">
+    ASP.NET MVC 随想录(6)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/category/670354.html" rel="" target="">
+    Bootstrap(5)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/category/392686.html" rel="" target="">
+    CLR via C# 技术内幕(5)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/category/567607.html" rel="" target="">
+    Disaster Recovery(2)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/category/659690.html" rel="" target="">
+    Hyper-V(1)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/category/382251.html" rel="" target="">
+    JavaScript
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/category/400473.html" rel="" target="">
+    Lucene.Net(1)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/category/466830.html" rel="" target="">
+    PowerShell For SharePoint(10)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/category/780275.html" rel="" target="">
+    Scrum(2)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/category/582195.html" rel="" target="">
+    SharePoint 2013 Step by Step(2)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/category/471158.html" rel="" target="">
+    SharePoint In Action(40)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/category/507122.html" rel="" target="">
+    SharePoint 项目实战(18)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/category/381976.html" rel="" target="">
+    SQL SERVER T-TQL(2)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/category/352178.html" rel="" target="">
+    Thinking In Design Pattern(10)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/category/827748.html" rel="" target="">
+    Unity 3D(16)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/category/972425.html" rel="" target="">
+    Unity应用架构设计(16)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/category/971418.html" rel="" target="">
+    VR SPACE
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/category/613125.html" rel="" target="">
+    跟我学SharePoint 2013视频培训课程(15)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/category/353453.html" rel="" target="">
+    架构思想(10)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/category/350874.html" rel="" target="">
+    木宛城(3)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/category/385667.html" rel="" target="">
+    网络编程(1)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/category/401324.html" rel="" target="">
+    项目管理(3)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/category/353286.html" rel="" target="">
+    杂谈(7)
+</a>
+
+                            
+
+                        </li>
+                        
+            </ul>
+        </div>
+        <div class="catListPostArchive">
+            <h3 class="catListTitle">
+                
+
+随笔档案
+<span style="font-size:11px;font-weight:normal">(153)</span>
+
+
+            </h3>
+            <ul>
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/archive/2020/01.html" rel="" target="">
+    2020年1月(1)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/archive/2017/07.html" rel="" target="">
+    2017年7月(2)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/archive/2017/06.html" rel="" target="">
+    2017年6月(2)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/archive/2017/05.html" rel="" target="">
+    2017年5月(2)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/archive/2017/03.html" rel="" target="">
+    2017年3月(11)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/archive/2016/06.html" rel="" target="">
+    2016年6月(2)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/archive/2016/05.html" rel="" target="">
+    2016年5月(2)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/archive/2016/01.html" rel="" target="">
+    2016年1月(2)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/archive/2015/09.html" rel="" target="">
+    2015年9月(2)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/archive/2015/08.html" rel="" target="">
+    2015年8月(1)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/archive/2015/07.html" rel="" target="">
+    2015年7月(1)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/archive/2015/06.html" rel="" target="">
+    2015年6月(1)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/archive/2015/05.html" rel="" target="">
+    2015年5月(1)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/archive/2015/04.html" rel="" target="">
+    2015年4月(3)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/archive/2015/03.html" rel="" target="">
+    2015年3月(2)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/archive/2015/02.html" rel="" target="">
+    2015年2月(6)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/archive/2015/01.html" rel="" target="">
+    2015年1月(13)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/archive/2014/09.html" rel="" target="">
+    2014年9月(3)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/archive/2014/08.html" rel="" target="">
+    2014年8月(1)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/archive/2014/07.html" rel="" target="">
+    2014年7月(2)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/archive/2014/06.html" rel="" target="">
+    2014年6月(7)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/archive/2014/05.html" rel="" target="">
+    2014年5月(3)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/archive/2014/04.html" rel="" target="">
+    2014年4月(1)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/archive/2014/03.html" rel="" target="">
+    2014年3月(9)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/archive/2014/02.html" rel="" target="">
+    2014年2月(1)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/archive/2014/01.html" rel="" target="">
+    2014年1月(5)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/archive/2013/12.html" rel="" target="">
+    2013年12月(5)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/archive/2013/11.html" rel="" target="">
+    2013年11月(2)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/archive/2013/10.html" rel="" target="">
+    2013年10月(5)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/archive/2013/09.html" rel="" target="">
+    2013年9月(2)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/archive/2013/08.html" rel="" target="">
+    2013年8月(3)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/archive/2013/07.html" rel="" target="">
+    2013年7月(2)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/archive/2013/06.html" rel="" target="">
+    2013年6月(4)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/archive/2013/04.html" rel="" target="">
+    2013年4月(2)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/archive/2013/03.html" rel="" target="">
+    2013年3月(1)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/archive/2012/12.html" rel="" target="">
+    2012年12月(1)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/archive/2012/11.html" rel="" target="">
+    2012年11月(1)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/archive/2012/10.html" rel="" target="">
+    2012年10月(2)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/archive/2012/09.html" rel="" target="">
+    2012年9月(4)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/archive/2012/08.html" rel="" target="">
+    2012年8月(7)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/archive/2012/07.html" rel="" target="">
+    2012年7月(9)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/archive/2012/06.html" rel="" target="">
+    2012年6月(2)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/archive/2012/05.html" rel="" target="">
+    2012年5月(2)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/archive/2012/04.html" rel="" target="">
+    2012年4月(2)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/archive/2012/03.html" rel="" target="">
+    2012年3月(2)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/archive/2012/02.html" rel="" target="">
+    2012年2月(4)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/archive/2012/01.html" rel="" target="">
+    2012年1月(1)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/archive/2011/10.html" rel="" target="">
+    2011年10月(1)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/archive/2011/07.html" rel="" target="">
+    2011年7月(1)
+</a>
+
+                            
+
+                        </li>
+                        
+                        <li>
+                            
+<a href="https://www.cnblogs.com/OceanEyes/archive/2011/05.html" rel="" target="">
+    2011年5月(2)
+</a>
+
+                            
+
+                        </li>
+                        
+            </ul>
+        </div>
+
+</div>
+
+<!-- 最新评论 -->
+<div id="sidebar_recentcomments" class="sidebar-block">
+    <div id="recent_comments_wrap" class="RecentComment">
+    <h3 class="catListTitle">最新评论</h3>
+    <div class="RecentCommentBlock">
+        <ul>
+                    <li class="recent_comment_title"><a href="https://www.cnblogs.com/OceanEyes/p/get-started-with-bootstrap.html#4493880">1. Re:ASP.NET MVC使用Bootstrap系列（1）——开始使用Bootstrap</a></li>
+                    <li class="recent_comment_body">十分好！</li>
+                    <li class="recent_comment_author">--清语堂</li>
+                    <li class="recent_comment_title"><a href="https://www.cnblogs.com/OceanEyes/p/design_pattern_in_gateway.html#4489367">2. Re:小谈网关项目中的设计模式</a></li>
+                    <li class="recent_comment_body">@ 木宛城主感谢楼主...</li>
+                    <li class="recent_comment_author">--Hulk~</li>
+                    <li class="recent_comment_title"><a href="https://www.cnblogs.com/OceanEyes/p/design_pattern_in_gateway.html#4489365">3. Re:小谈网关项目中的设计模式</a></li>
+                    <li class="recent_comment_body">@ Hulk~一方面是多看多读，比如了解了模式的基本使用后，可以去看下优秀的框架的源码。另一方面是多实践，个人觉得策略模式，工厂模式比较简单和容易上手，用好他们基本可以让程序变得可扩展起来。有了实践之...</li>
+                    <li class="recent_comment_author">--木宛城主</li>
+                    <li class="recent_comment_title"><a href="https://www.cnblogs.com/OceanEyes/p/design_pattern_in_gateway.html#4489262">4. Re:小谈网关项目中的设计模式</a></li>
+                    <li class="recent_comment_body">请求楼主，如何能像你一样写出这么漂亮的代码？<br>我学习了设计模式不知如何在项目中使用<br>项目中充满了像面条一样的代码，错综复杂，想要抽出变化的点，又不知该如何下手<br>怎么破？</li>
+                    <li class="recent_comment_author">--Hulk~</li>
+                    <li class="recent_comment_title"><a href="https://www.cnblogs.com/OceanEyes/p/design_pattern_in_gateway.html#4489171">5. Re:小谈网关项目中的设计模式</a></li>
+                    <li class="recent_comment_body">@ 雪雁都香。.NET CORE 发展也挺快的...</li>
+                    <li class="recent_comment_author">--木宛城主</li>
+                    <li class="recent_comment_title"><a href="https://www.cnblogs.com/OceanEyes/p/design_pattern_in_gateway.html#4488945">6. Re:小谈网关项目中的设计模式</a></li>
+                    <li class="recent_comment_body">3年了，终于开张了？<br>ASP.NET Core也蛮香的，可以考虑考虑哈。<br>上述部分设计模式，可以考虑使用依赖注入替代。更香更简单粗暴。配合模块化、组件化，会更爽。</li>
+                    <li class="recent_comment_author">--雪雁</li>
+                    <li class="recent_comment_title"><a href="https://www.cnblogs.com/OceanEyes/p/thinking-in-asp-net-mvc-create-custom-middleware.html#4343311">7. Re:ASP.NET MVC随想录——创建自定义的Middleware中间件</a></li>
+                    <li class="recent_comment_body">15年就这么牛逼了……</li>
+                    <li class="recent_comment_author">--qook</li>
+                    <li class="recent_comment_title"><a href="https://www.cnblogs.com/OceanEyes/archive/2012/07/06/aspmvcgo.html#4295204">8. Re:步步为营：三层架构+ASP.NET MVC 架构的快速搭建(入门篇)</a></li>
+                    <li class="recent_comment_body">没依赖注入？》</li>
+                    <li class="recent_comment_author">--海阔天空XM</li>
+                    <li class="recent_comment_title"><a href="https://www.cnblogs.com/OceanEyes/p/unity3d_framework_designing_get_started_with_mvvm_part2.html#4257992">9. Re:Unity应用架构设计(1)—— MVVM 模式的设计和实施(Part 2)</a></li>
+                    <li class="recent_comment_body">还是没懂,感觉仅仅只是实现了数据改变监听.......反正跟我想象的mvvm差距挺大的1.视图编写有没dsl可用么?2.再vm回绑到视图有没什么性能优化呢,一般来说这里写的不好性能会比较差....</li>
+                    <li class="recent_comment_author">--cjz9032</li>
+                    <li class="recent_comment_title"><a href="https://www.cnblogs.com/OceanEyes/p/thinking-in-asp-net-mvc-get-started-with-identity.html#4162330">10. Re:ASP.NET MVC 随想录——开始使用ASP.NET Identity，初级篇</a></li>
+                    <li class="recent_comment_body">看了几篇都没有你这片说呢清楚</li>
+                    <li class="recent_comment_author">--_York</li>
+                    <li class="recent_comment_title"><a href="https://www.cnblogs.com/OceanEyes/p/aop_in_action.html#4154653">11. Re:Unity应用架构设计(12)——AOP思想的实践</a></li>
+                    <li class="recent_comment_body">你这样弄 还不如直接Emit编织 ，麻烦了点，比反射快而且还不用配置。<br>unity3D是支持的，我有看到这个dll,<br>若是博主弄出来记得发到商店里，我还没有看到一款好用的AOP项目。</li>
+                    <li class="recent_comment_author">--AnAng</li>
+                    <li class="recent_comment_title"><a href="https://www.cnblogs.com/OceanEyes/archive/2012/07/06/aspmvcgo.html#4114416">12. Re:步步为营：三层架构+ASP.NET MVC 架构的快速搭建(入门篇)</a></li>
+                    <li class="recent_comment_body">mail_along@163.com 学习一下谢谢</li>
+                    <li class="recent_comment_author">--阿里山的少年</li>
+                    <li class="recent_comment_title"><a href="https://www.cnblogs.com/OceanEyes/p/thinking-in-asp-net-mvc-what-is-katana.html#4107195">13. Re:ASP.NET MVC随想录——锋利的KATANA</a></li>
+                    <li class="recent_comment_body">虽然看得半懵半懂，但是觉得楼主好厉害啊，把各种情况都讲了各遍</li>
+                    <li class="recent_comment_author">--懒东</li>
+                    <li class="recent_comment_title"><a href="https://www.cnblogs.com/OceanEyes/p/think_in_design_pattern_mvp.html#4053587">14. Re:Thinking In Design Pattern——MVP模式演绎</a></li>
+                    <li class="recent_comment_body">多谢楼主.</li>
+                    <li class="recent_comment_author">--liulangren</li>
+                    <li class="recent_comment_title"><a href="http://www.cnblogs.com/OceanEyes/p/log_strategy.html#4032049">15. Re:Unity应用架构设计(13)——日志组件的实施</a></li>
+                    <li class="recent_comment_body">花了差不多一个星期断断续续看完了博主Unity架构系列的文章，作为一个刚从Java Web转到Unity的小菜鸟来说，感觉学到了很多东西！<br>感谢博主的辛勤创作~~~</li>
+                    <li class="recent_comment_author">--sword_magic</li>
+                    <li class="recent_comment_title"><a href="http://www.cnblogs.com/OceanEyes/p/unity3d_framework_designing_get_started_with_mvvm_part1.html#4025444">16. Re:Unity应用架构设计(1)—— MVVM 模式的设计和实施(Part 1)</a></li>
+                    <li class="recent_comment_body">博主大大，想问一下，这一段 if (oldVm != null) { oldVm.Name.OnValueChanged -= NameValueChanged; ... } 为什么要手工将旧View...</li>
+                    <li class="recent_comment_author">--sword_magic</li>
+                    <li class="recent_comment_title"><a href="http://www.cnblogs.com/OceanEyes/archive/2012/10/29/UnitOfWork--ByEyes.html#4015246">17. Re:Thinking In Design Pattern——Unit Of Work（工作单元）模式探索</a></li>
+                    <li class="recent_comment_body">初学架构过来围观下。真的感觉好复杂......。。。好难啊。。。。</li>
+                    <li class="recent_comment_author">--碌云</li>
+                    <li class="recent_comment_title"><a href="http://www.cnblogs.com/OceanEyes/p/implement_a_interpreter.html#3962947">18. Re:从编译原理看一个解释器的实现</a></li>
+                    <li class="recent_comment_body">我也写过 matlab 的数学表达式解释，现在已经在项目使用，用的算法需要覆盖 sin(x) 这些，所以就没有使用 BNF 。看到了博主的博客，点赞，讲的好明白，我自己写给专利看的，结果他都说看不懂。</li>
+                    <li class="recent_comment_author">--lindexi</li>
+                    <li class="recent_comment_title"><a href="http://www.cnblogs.com/OceanEyes/p/thinking-in-asp-net-mvc-what-is-katana.html#3937723">19. Re:ASP.NET MVC随想录——锋利的KATANA</a></li>
+                    <li class="recent_comment_body">许久之后再次回头阅读，感觉突然豁然开朗了许多。感谢博主辛劳创作。期待更多佳作</li>
+                    <li class="recent_comment_author">--P了个F</li>
+                    <li class="recent_comment_title"><a href="http://www.cnblogs.com/OceanEyes/archive/2012/06/18/project.html#3934859">20. Re:两天完成一个小型工程报价系统(三层架构)</a></li>
+                    <li class="recent_comment_body">1870076579@qq.com 可以借鉴一下吗</li>
+                    <li class="recent_comment_author">--疯老虎</li>
+                    <li class="recent_comment_title"><a href="http://www.cnblogs.com/OceanEyes/archive/2012/07/06/aspmvcgo.html#3879337">21. Re:步步为营：三层架构+ASP.NET MVC 架构的快速搭建(入门篇)</a></li>
+                    <li class="recent_comment_body">qinglnet@163.com  楼主来一发，学习学习。</li>
+                    <li class="recent_comment_author">--qinglnet</li>
+                    <li class="recent_comment_title"><a href="http://www.cnblogs.com/OceanEyes/p/thinking-in-asp-net-mvc-get-started-with-identity.html#3830341">22. Re:ASP.NET MVC 随想录——开始使用ASP.NET Identity，初级篇</a></li>
+                    <li class="recent_comment_body">@ BsaGyy@BsaGyy引用原来是迁移文件搞得鬼，虽然不懂原理，但是把迁移文件夹删除之后一切都好了搞定的麻烦发下方法，现在也困在这里进行不下去了。数据库一直不行。兩天后搞定了，可參考...</li>
+                    <li class="recent_comment_author">--Bruce_Cheung</li>
+                    <li class="recent_comment_title"><a href="http://www.cnblogs.com/OceanEyes/p/aop_in_action.html#3808435">23. Re:Unity应用架构设计(12)——AOP思想的实践</a></li>
+                    <li class="recent_comment_body">非常好</li>
+                    <li class="recent_comment_author">--她来看我写代码</li>
+                    <li class="recent_comment_title"><a href="http://www.cnblogs.com/OceanEyes/p/thinking-in-asp-net-mvc-what-is-owin.html#3806764">24. Re:ASP.NET MVC随想录——漫谈OWIN</a></li>
+                    <li class="recent_comment_body">好文要马</li>
+                    <li class="recent_comment_author">--春華秋實</li>
+                    <li class="recent_comment_title"><a href="http://www.cnblogs.com/OceanEyes/archive/2012/07/31/lucenenet.html#3769202">25. Re:火力全开——仿造Baidu简单实现基于Lucene.net的全文检索的功能</a></li>
+                    <li class="recent_comment_body">楼主。查出来的哪些数据是放在哪里的呀</li>
+                    <li class="recent_comment_author">--ProMise灬zzz</li>
+                    <li class="recent_comment_title"><a href="http://www.cnblogs.com/OceanEyes/archive/2012/07/31/lucenenet.html#3769058">26. Re:火力全开——仿造Baidu简单实现基于Lucene.net的全文检索的功能</a></li>
+                    <li class="recent_comment_body">楼主有数据库嘛</li>
+                    <li class="recent_comment_author">--asxcw</li>
+                    <li class="recent_comment_title"><a href="http://www.cnblogs.com/OceanEyes/p/asp-net-identity-claim-based-authorization.html#3759494">27. Re:ASP.NET MVC 随想录——  使用ASP.NET Identity实现基于声明的授权，高级篇</a></li>
+                    <li class="recent_comment_body">喜欢楼主的写作风格，特别喜欢最后那一句话。。。</li>
+                    <li class="recent_comment_author">--随心520</li>
+                    <li class="recent_comment_title"><a href="http://www.cnblogs.com/OceanEyes/p/using-bootstrap-javascript-plugins.html#3752670">28. Re:ASP.NET MVC使用Bootstrap系列（4）——使用JavaScript插件</a></li>
+                    <li class="recent_comment_body">好文章</li>
+                    <li class="recent_comment_author">--墨暖</li>
+                    <li class="recent_comment_title"><a href="http://www.cnblogs.com/OceanEyes/archive/2012/08/13/aspnetEssential-1.html#3741668">29. Re:ASP.NET那点不为人知的事（一）</a></li>
+                    <li class="recent_comment_body">请问楼主大牛还有邹老师的视频吗？网上好像找不到了</li>
+                    <li class="recent_comment_author">--又见阿郎</li>
+                    <li class="recent_comment_title"><a href="http://www.cnblogs.com/OceanEyes/archive/2012/08/13/aspnetEssential-1.html#3730972">30. Re:ASP.NET那点不为人知的事（一）</a></li>
+                    <li class="recent_comment_body">为什么不管看多少遍，能记住的也就只有里面两三个方法？是因为我始终找不到场景使用吗？</li>
+                    <li class="recent_comment_author">--故乡的星空</li>
+                    <li class="recent_comment_title"><a href="http://www.cnblogs.com/OceanEyes/p/get-started-with-bootstrap.html#3730142">31. Re:ASP.NET MVC使用Bootstrap系列（1）——开始使用Bootstrap</a></li>
+                    <li class="recent_comment_body">最新Bootstrap手册：<a href="https://www.cnblogs.com/OceanEyes/archive/2017/06/18/7045868.html" target="_blank"></a></li>
+                    <li class="recent_comment_author">--武鸿达</li>
+                    <li class="recent_comment_title"><a href="http://www.cnblogs.com/OceanEyes/p/creating-bootstrap-helpers.html#3729912">32. Re:ASP.NET MVC使用Bootstrap系列（5）——创建ASP.NET MVC Bootstrap Helpers</a></li>
+                    <li class="recent_comment_body">最新Bootstrap手册：<a href="https://www.cnblogs.com/OceanEyes/archive/2017/06/18/7045868.html" target="_blank"></a></li>
+                    <li class="recent_comment_author">--武鸿达</li>
+                    <li class="recent_comment_title"><a href="http://www.cnblogs.com/OceanEyes/p/using-bootstrap-components.html#3729636">33. Re:ASP.NET MVC使用Bootstrap系列（3）——使用Bootstrap 组件</a></li>
+                    <li class="recent_comment_body">最新Bootstrap手册：<a href="https://www.cnblogs.com/OceanEyes/archive/2017/06/18/7045868.html" target="_blank"></a></li>
+                    <li class="recent_comment_author">--武鸿达</li>
+                    <li class="recent_comment_title"><a href="http://www.cnblogs.com/OceanEyes/p/bootstrap-html-elements.html#3729588">34. Re:ASP.NET MVC使用Bootstrap系统（2）——使用Bootstrap CSS和HTML元素</a></li>
+                    <li class="recent_comment_body">最新Bootstrap手册：<a href="https://www.cnblogs.com/OceanEyes/archive/2017/06/18/7045868.html" target="_blank"></a></li>
+                    <li class="recent_comment_author">--武鸿达</li>
+                    <li class="recent_comment_title"><a href="http://www.cnblogs.com/OceanEyes/p/aop_in_action.html#3728768">35. Re:Unity应用架构设计(12)——AOP思想的实践</a></li>
+                    <li class="recent_comment_body">支持一下！</li>
+                    <li class="recent_comment_author">--马三小伙儿</li>
+                    <li class="recent_comment_title"><a href="http://www.cnblogs.com/OceanEyes/p/aop_in_action.html#3728559">36. Re:Unity应用架构设计(12)——AOP思想的实践</a></li>
+                    <li class="recent_comment_body">@ Lemon丶说得好，受教了...</li>
+                    <li class="recent_comment_author">--木宛城主</li>
+                    <li class="recent_comment_title"><a href="http://www.cnblogs.com/OceanEyes/p/aop_in_action.html#3728558">37. Re:Unity应用架构设计(12)——AOP思想的实践</a></li>
+                    <li class="recent_comment_body">@ 木宛城主反射性能是一回事。另一方面，aop 是否支持拦截器管道链式调用，aop是否可以简便配置，以及能否和IoC友好的集成都是需要考虑的地方...</li>
+                    <li class="recent_comment_author">--Lemon丶</li>
+                    <li class="recent_comment_title"><a href="http://www.cnblogs.com/OceanEyes/p/aop_in_action.html#3728477">38. Re:Unity应用架构设计(12)——AOP思想的实践</a></li>
+                    <li class="recent_comment_body">@ Lemon丶好的。不过反射性能，仁者见仁智者见智吧，很多框架都是基于反射实现的。...</li>
+                    <li class="recent_comment_author">--木宛城主</li>
+                    <li class="recent_comment_title"><a href="http://www.cnblogs.com/OceanEyes/p/aop_in_action.html#3728474">39. Re:Unity应用架构设计(12)——AOP思想的实践</a></li>
+                    <li class="recent_comment_body">直接反射不是一个好的实践~<br>对于.net上的AOP ，最佳实践可以看我写的 <a href="https://www.cnblogs.com/OceanEyes/archive/2017/06/18/7045868.html" target="_blank"></a></li>
+                    <li class="recent_comment_author">--Lemon丶</li>
+                    <li class="recent_comment_title"><a href="http://www.cnblogs.com/OceanEyes/p/thinking-in-asp-net-mvc-get-started-with-identity.html#3725156">40. Re:ASP.NET MVC 随想录——开始使用ASP.NET Identity，初级篇</a></li>
+                    <li class="recent_comment_body">原来是迁移文件搞得鬼，虽然不懂原理，但是把迁移文件夹删除之后一切都好了</li>
+                    <li class="recent_comment_author">--BsaGyy</li>
+        </ul>
+    </div>
+</div>
+</div>
+
+
+
+<!-- 阅读排行榜 -->
+
+
+<!-- 评论排行榜 -->
+
+
+<!-- 推荐排行榜 -->
+</div>
+                    <script>loadBlogSideColumn();</script>
+                    <!-- end:  SingleColumn -->
+                </div>
+            </div>
+        </div>
+        <div class="clear"></div>
+    </div>
+    <div class="clear"></div>
+    <div id="footer">
+        <!--done-->
+Copyright © 2020 木宛城主
+<br><span id="poweredby">Powered by .NET Core on Kubernetes</span>
+
+    </div>
+</div>
+
+    <div id="page_end_html">
+        <div align="center"><a href="http://www.inkjetdeals.info/brands/dell.html"><img border="0" src="./从编译原理看一个解释器的实现 - 木宛城主 - 博客园_files/9248710.png" alt="multifunction lasers"><br>访问人数</a></div>
+<script language="javascript" type="text/javascript">
+//生成目录索引列表
+function GenerateContentList()
+{
+    var jquery_h3_list = $('#cnblogs_post_body h3');//如果你的章节标题不是h3,只需要将这里的h3换掉即可
+    if(jquery_h3_list .length<=0){
+       jquery_h3_list=$('#cnblogs_post_body h1');
+     }
+    if(jquery_h3_list.length>0)
+    {
+        var content = '<a name="_labelTop"></a>';
+        content    += '<div id="navCategory">';
+        content    += '<p style="font-size:18px"><b>阅读目录</b></p>';
+        content    += '<ul>';
+        for(var i =0;i<jquery_h3_list.length;i++)
+        {
+            var go_to_top = '<div style="text-align: right"><a href="#_labelTop">回到顶部</a><a name="_label' + i + '"></a></div>';
+            $(jquery_h3_list[i]).before(go_to_top);
+            var li_content = '<li><a href="#_label' + i + '">' + $(jquery_h3_list[i]).text() + '</a></li>';
+            content += li_content;
+        }
+        content    += '</ul>';
+        content    += '</div>';
+        if($('#cnblogs_post_body').length != 0 )
+        {
+            $($('#cnblogs_post_body')[0]).prepend(content);
+        }
+    }    
+}
+GenerateContentList();
+</script>
+<!--PageEndHtml Block Begin-->
+
+
+<div id="roll">
+	<div title="回到顶部" id="roll_top">
+	</div>
+</div>
+<!-- JiaThis Button BEGIN -->
+<script type="text/javascript" src="./从编译原理看一个解释器的实现 - 木宛城主 - 博客园_files/jiathis_r.js.下载" charset="utf-8"></script>
+<!-- JiaThis Button END -->
+<style>
+
+	#back-to-top{
+		position:fixed;
+		bottom:150px;
+		right:74px;
+	}
+	#back-to-top a{
+		text-align:center;
+		text-decoration:none;
+		color:#d1d1d1;
+		display:block;
+		width:80px;
+		/*使用CSS3中的transition属性给跳转链接中的文字添加渐变效果*/
+		-moz-transition:color 1s; 
+		-webkit-transition:color 1s;
+		-o-transition:color 1s;
+	}
+	#back-to-top a:hover{
+		color:#979797;
+	}
+	#back-to-top a span{
+		border-radius:6px;
+		display:block;
+		height:80px;
+		width:80px;
+		background:url(http://pic002.cnblogs.com/images/2011/36987/2011051823234124.png) no-repeat center center;
+		margin-bottom:5px;
+		-moz-transition:background 1s;
+		-webkit-transition:background 1s;
+		-o-transition:background 1s;
+	}
+	#back-to-top a:hover span{
+		background:#979797 url(http://pic002.cnblogs.com/images/2011/36987/2011051823234124.png) no-repeat center center;
+	}
+</style>
+<script type="text/javascript">
+  $("head").prepend('');
+
+      $(document).ready(function () {
+          //首先将#back-to-top隐藏
+          $("#back-to-top").hide();
+          //当滚动条的位置处于距顶部100像素以下时，跳转链接出现，否则消失
+          $(function () {
+              $(window).scroll(function () {
+                  if ($(window).scrollTop() > 100) {
+                      $("#back-to-top").fadeIn(1500);
+                  }
+                  else {
+                      $("#back-to-top").fadeOut(1500);
+                  }
+              });
+              //当点击跳转链接后，回到页面顶部位置
+              $("#back-to-top").click(function () {
+                  $('body,html').animate({ scrollTop: 0 }, 1000);
+                  return false;
+              });
+          });
+      });
+  </script>
+<p id="back-to-top" style="display: block;">
+	<a href="https://www.cnblogs.com/OceanEyes/archive/2017/06/18/7045868.html#top"><span></span></a>
+</p>
+<script type="text/javascript">
+     function SetFavorite(){
+	if( $("#div_digg").length < 1 ){
+		setTimeout(SetFavorite, 1000); return;
+	}
+
+	$("<div style='padding-bottom: 5px'></div>")
+		.append($("<span class='icon_favorite' style='padding-top: 2px; padding-bottom: 2px'></span>"))
+		.append($("#green_channel_follow").clone(true).text("关注木宛城主")
+				.removeAttr("id").css({ "font-weight": "bold", "padding-left": "5px" }))
+		.prependTo("#div_digg");
+}
+ SetFavorite();
+</script>
+<!--PageEndHtml Block End-->
+
+<!--uMVVM-->
+    </div>
+
+</body></html>
